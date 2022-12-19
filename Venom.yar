@@ -5,6 +5,7 @@ rule HKTL_Venom_LIB_Dec22 {
       author = "Ido Veltzman, Florian Roth"
       reference = "https://github.com/Idov31/Venom"
       date = "2022-12-17"
+      modified = "2022-12-19"
       score = 75
    strings:
       $x1 = "[ + ] Created detached hidden msedge process: " fullword ascii
