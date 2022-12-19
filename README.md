@@ -47,6 +47,10 @@ Moreover, you can read that they also wrote *"... Even if the connectionless soc
 
 - Receiving: To receive data, you can use [recv](https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-recv) function and because no user using this browser process, it reduces greatly the chances of collision.
 
+## Contributors
+
+- [Florian Roth](https://github.com/Neo23x0)
+
 ## Resources
 
 - [ShadowMove](https://github.com/0xcpu/winsmsd)
